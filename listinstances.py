@@ -17,7 +17,7 @@ try:
   oci.resource_search.models.StructuredSearchDetails(
   type="Structured",
   query="query instance resources where lifeCycleState != 'TERMINATED'"
-  )
+  ),limit=1000
 )
 except Exception as ex:
   print(ex)
