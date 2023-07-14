@@ -9,6 +9,6 @@ do
     sync_status=`oci resource-manager stack get --stack-id $stack|grep "stack-drift-status"| awk '{print $2}'|tr -d ','`
     if [ $sync_status != '"IN_SYNC"' ]
     then
-        echo -n "Stack id ${stack} is out of sync" > ORMstackdriftreport.txt
+        echo "Stack id ${stack} is out of sync" > ORMstackdriftreport.txt
     fi
 done
