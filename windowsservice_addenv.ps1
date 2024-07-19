@@ -81,13 +81,13 @@ function Remove-Windows-Service([string]$WindowsServiceName) {
         "DOTNET_SHARED_STORE",
         "DOTNET_STARTUP_HOOKS",
         # OpenTelemetry
-        "OTEL_DOTNET_AUTO_HOME"
+        "OTEL_DOTNET_AUTO_HOME",
         #OCI APM
-        "OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES"
-        "OTEL_LOGS_EXPORTER"
-        "OTEL_DOTNET_AUTO_EXCLUDE_PROCESSES"
-        "OTEL_EXPORTER_OTLP_ENDPOINT"
-        "OTEL_EXPORTER_OTLP_HEADERS"
+        "OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES",
+        "OTEL_LOGS_EXPORTER",
+        "OTEL_DOTNET_AUTO_EXCLUDE_PROCESSES",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_HEADERS")
 
     $regPath = "HKLM:SYSTEM\CurrentControlSet\Services\"
     $regKey = Join-Path $regPath $WindowsServiceName
