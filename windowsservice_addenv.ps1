@@ -87,7 +87,8 @@ function Remove-Windows-Service([string]$WindowsServiceName) {
         "OTEL_LOGS_EXPORTER",
         "OTEL_DOTNET_AUTO_EXCLUDE_PROCESSES",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
-        "OTEL_EXPORTER_OTLP_HEADERS")
+        "OTEL_EXPORTER_OTLP_HEADERS",
+        "OTEL_SERVICE_NAME")
 
     $regPath = "HKLM:SYSTEM\CurrentControlSet\Services\"
     $regKey = Join-Path $regPath $WindowsServiceName
