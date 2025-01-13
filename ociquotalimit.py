@@ -1,8 +1,12 @@
 import concurrent.futures
 import oci
 import json
+from oci.retry import RetryStrategyBuilder
 
+#By default it expects the config to be present in ~/.oci/config.Specify the absolute path if its in  a different path.
 config = oci.config.from_file()
+
+#Replace the placeholder with correct values
 tenancy_id = "<tenancy_ocid>"
 log_group_id = "<LA_log_group_ocid>"
 LA_NAMESPACE = "<logging analytics namespace>"
@@ -11,6 +15,7 @@ limits_client = oci.limits.LimitsClient(config)
 identity_client = oci.identity.IdentityClient(config)
 log_analytics_client = oci.log_analytics.LogAnalyticsClient(config)
 
+#Fetch availability domain names
 availability_domains = identity_client.list_availability_domains(compartment_id=tenancy_id).data
 availability_domain_name = []
 for ad in availability_domains:
@@ -25,7 +30,7 @@ def get_retry_strategy():
         total_elapsed_time_seconds=300
     ).get_retry_strategy()
 
-
+#To fetch limit_name,service_name and scope details from limit_definitions API
 def list_services() -> dict:
     list_limit_definitions_response = oci.pagination.list_call_get_all_results(limits_client.list_limit_definitions,
                                                                                compartment_id=tenancy_id)
@@ -63,6 +68,7 @@ def get_string_after_last_colon(input_string):
         return None
 
 
+#To list compartment names from the quota policy statements
 def list_quota_compartment() -> list:
     quotas_client = oci.limits.QuotasClient(config)
     list_quotas_response = quotas_client.list_quotas(
@@ -77,7 +83,6 @@ def list_quota_compartment() -> list:
             quota_id=quota_id)
         for statement in get_quota_response.data.statements:
             if "compartment" in statement:
-                # print(statement)
                 compartment = get_string_after_last_colon(statement)
                 if compartment is not None:
                     compartment_name_list.append(compartment)
@@ -85,6 +90,7 @@ def list_quota_compartment() -> list:
     return list(set(compartment_name_list))
 
 
+#To upload data to logging analytics
 def upload_to_logginganalytics(data):
     log_analytics_client.upload_log_file(
         namespace_name=LA_NAMESPACE,
@@ -97,6 +103,7 @@ def upload_to_logginganalytics(data):
         retry_strategy=get_retry_strategy())
 
 
+#To get compartment_ocid from compartment_name.
 def list_compartment_id(compartment_name) -> str:
     compartment_ocid = oci.pagination.list_call_get_all_results(identity_client.list_compartments,
                                                                 compartment_id=tenancy_id,
