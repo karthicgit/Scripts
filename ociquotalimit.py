@@ -40,19 +40,27 @@ def list_services() -> dict:
 
     return limit_list
 
-
+#Function to fetch the compartment name from the quota statements.It can handle below example statements.If you have a different testcase please modify.
+#Example1: set quota <servicename> <limitname> to <number> in compartment <compartmentname>
+#Example2: set quota <servicename> <limitname> to <number> in compartment <parentcompartmentname>:<childcompartmentname>
+#Example3: set quota <servicename> <limitname> to <number> in compartment <compartmentname> where <statements>
 def get_string_after_last_colon(input_string):
-    if ':' in input_string and "compartment" in input_string:
-        # Split the string by colon and return the last part
-        return input_string.split(':')[-1].strip()
+    if ':' in input_string:
+        parts = input_string.rsplit(':', 1)  # Split from the right, only once
+        if len(parts) > 1:
+            end_string=parts[1].strip()
+            return end_string.split()[0]
+    elif ":" not in input_string:
+        index = input_string.find("compartment")
+        if index != -1:
+            # Slice the string from the end of "compartment"
+            substring = input_string[index + len("compartment"):].strip()
+            
+            # Split the substring by whitespace and return the first part
+            first_string = substring.split()[0] if substring else None
+            return first_string
     else:
-        # Check for the word 'compartment'
-        if 'compartment' in input_string:
-            # Split the string by 'compartment' and return the part after it
-            return input_string.split('compartment')[-1].strip()
-        else:
-            # If neither is found, return None
-            return None
+        return None
 
 
 def list_quota_compartment() -> list:
