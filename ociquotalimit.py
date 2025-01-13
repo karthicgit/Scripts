@@ -1,7 +1,6 @@
 import concurrent.futures
 import oci
 import json
-from oci.retry import RetryStrategyBuilder
 
 #By default it expects the config to be present in ~/.oci/config.Specify the absolute path if its in  a different path.
 config = oci.config.from_file()
@@ -15,20 +14,21 @@ limits_client = oci.limits.LimitsClient(config)
 identity_client = oci.identity.IdentityClient(config)
 log_analytics_client = oci.log_analytics.LogAnalyticsClient(config)
 
+custom_retry_strategy = oci.retry.RetryStrategyBuilder(
+    # Make up to 5 service calls
+    max_attempts_check=True,
+    max_attempts=5,
+    # Don't exceed a total of 300 seconds for all service calls
+    total_elapsed_time_check=True,
+    total_elapsed_time_seconds=600
+).get_retry_strategy()
+
 #Fetch availability domain names
 availability_domains = identity_client.list_availability_domains(compartment_id=tenancy_id).data
 availability_domain_name = []
 for ad in availability_domains:
     availability_domain_name.append(ad.name)
 
-
-def get_retry_strategy():
-    return RetryStrategyBuilder(
-        max_attempts_check=True,
-        max_attempts=5,
-        total_elapsed_time_check=True,
-        total_elapsed_time_seconds=300
-    ).get_retry_strategy()
 
 #To fetch limit_name,service_name and scope details from limit_definitions API
 def list_services() -> dict:
@@ -100,7 +100,7 @@ def upload_to_logginganalytics(data):
         filename="quota.json",
         content_type="application/octet-stream",
         upload_log_file_body=data,
-        retry_strategy=get_retry_strategy())
+        retry_strategy=custom_retry_strategy)
 
 
 #To get compartment_ocid from compartment_name.
