@@ -1,6 +1,7 @@
 import concurrent.futures
 import oci
 import json
+import sys
 
 #By default it expects the config to be present in ~/.oci/config.Specify the absolute path if its in  a different path.
 config = oci.config.from_file()
@@ -153,6 +154,7 @@ def list_compartments_quota(compartment_name):
                               "Service": service_name, "Compartment": compartment_name}
                 all_quota.append(quota_dict)
 
+    print(f"Size of the data:{sys.getsizeof(all_quota)}")
     upload_data = json.dumps(all_quota)
     upload_to_logginganalytics(upload_data)
 
