@@ -17,6 +17,15 @@ for ad in availability_domains:
     availability_domain_name.append(ad.name)
 
 
+def get_retry_strategy():
+    return RetryStrategyBuilder(
+        max_attempts_check=True,
+        max_attempts=5,
+        total_elapsed_time_check=True,
+        total_elapsed_time_seconds=300
+    ).get_retry_strategy()
+
+
 def list_services() -> dict:
     list_limit_definitions_response = oci.pagination.list_call_get_all_results(limits_client.list_limit_definitions,
                                                                                compartment_id=tenancy_id)
@@ -76,7 +85,8 @@ def upload_to_logginganalytics(data):
         opc_meta_loggrpid=log_group_id,
         filename="quota.json",
         content_type="application/octet-stream",
-        upload_log_file_body=data)
+        upload_log_file_body=data,
+        retry_strategy=get_retry_strategy())
 
 
 def list_compartment_id(compartment_name) -> str:
