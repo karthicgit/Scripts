@@ -5,15 +5,15 @@ import sys
 
 #By default it expects the config to be present in ~/.oci/config.Specify the absolute path if its in  a different path.
 config = oci.config.from_file()
+tenancy_id = config['tenancy']
 
 #Replace the placeholder with correct values
-tenancy_id = "<tenancy_ocid>"
 log_group_id = "<LA_log_group_ocid>"
-LA_NAMESPACE = "<logging analytics namespace>"
 
 limits_client = oci.limits.LimitsClient(config)
 identity_client = oci.identity.IdentityClient(config)
 log_analytics_client = oci.log_analytics.LogAnalyticsClient(config)
+quotas_client = oci.limits.QuotasClient(config)
 
 custom_retry_strategy = oci.retry.RetryStrategyBuilder(
     # Make up to 5 service calls
@@ -31,6 +31,17 @@ for ad in availability_domains:
     availability_domain_name.append(ad.name)
 
 
+def la_namespace():
+    list_namespaces_response = log_analytics_client.list_namespaces(
+        compartment_id=tenancy_id)
+    la_items = list_namespaces_response.data.items[0]
+    if la_items.is_onboarded:
+        return list_namespaces_response.data.items[0].namespace_name
+    else:
+        print("Logging Analytics is not enabled.Please enable and proceed")
+        exit(0)
+
+LA_NAMESPACE = la_namespace()
 #To fetch limit_name,service_name and scope details from limit_definitions API
 def list_services() -> dict:
     list_limit_definitions_response = oci.pagination.list_call_get_all_results(limits_client.list_limit_definitions,
@@ -71,7 +82,6 @@ def get_string_after_last_colon(input_string):
 
 #To list compartment names from the quota policy statements
 def list_quota_compartment() -> list:
-    quotas_client = oci.limits.QuotasClient(config)
     list_quotas_response = quotas_client.list_quotas(
         compartment_id=tenancy_id,
         lifecycle_state="ACTIVE",
