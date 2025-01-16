@@ -22,7 +22,7 @@ custom_retry_strategy = oci.retry.RetryStrategyBuilder(
     max_attempts=5,
     # Don't exceed a total of 300 seconds for all service calls
     total_elapsed_time_check=True,
-    total_elapsed_time_seconds=600
+    total_elapsed_time_seconds=300
 ).get_retry_strategy()
 
 #Fetch availability domain names
