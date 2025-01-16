@@ -16,14 +16,14 @@ identity_client = oci.identity.IdentityClient(config)
 log_analytics_client = oci.log_analytics.LogAnalyticsClient(config)
 quotas_client = oci.limits.QuotasClient(config)
 
-custom_retry_strategy = oci.retry.RetryStrategyBuilder(
-    # Make up to 5 service calls
-    max_attempts_check=True,
-    max_attempts=5,
-    # Don't exceed a total of 300 seconds for all service calls
-    total_elapsed_time_check=True,
-    total_elapsed_time_seconds=300
-).get_retry_strategy()
+# custom_retry_strategy = oci.retry.RetryStrategyBuilder(
+#     # Make up to 5 service calls
+#     max_attempts_check=True,
+#     max_attempts=5,
+#     # Don't exceed a total of 300 seconds for all service calls
+#     total_elapsed_time_check=True,
+#     total_elapsed_time_seconds=300
+# ).get_retry_strategy()
 
 #Fetch availability domain names
 availability_domains = identity_client.list_availability_domains(compartment_id=tenancy_id).data
@@ -100,8 +100,7 @@ def upload_to_logginganalytics(data):
         opc_meta_loggrpid=log_group_id,
         filename="quota.json",
         content_type="application/octet-stream",
-        upload_log_file_body=data,
-        retry_strategy=custom_retry_strategy)
+        upload_log_file_body=data)
 
 
 #To get compartment_ocid from compartment_name.
