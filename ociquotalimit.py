@@ -9,6 +9,7 @@ tenancy_id = config['tenancy']
 
 #Replace the placeholder with correct values
 log_group_id = "<LA_log_group_ocid>"
+LA_NAMESPACE = "<Logging analytics namespace>"
 
 limits_client = oci.limits.LimitsClient(config)
 identity_client = oci.identity.IdentityClient(config)
@@ -31,17 +32,6 @@ for ad in availability_domains:
     availability_domain_name.append(ad.name)
 
 
-def la_namespace():
-    list_namespaces_response = log_analytics_client.list_namespaces(
-        compartment_id=tenancy_id)
-    la_items = list_namespaces_response.data.items[0]
-    if la_items.is_onboarded:
-        return list_namespaces_response.data.items[0].namespace_name
-    else:
-        print("Logging Analytics is not enabled.Please enable and proceed")
-        exit(0)
-
-LA_NAMESPACE = la_namespace()
 #To fetch limit_name,service_name and scope details from limit_definitions API
 def list_services() -> dict:
     list_limit_definitions_response = oci.pagination.list_call_get_all_results(limits_client.list_limit_definitions,
