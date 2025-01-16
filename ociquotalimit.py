@@ -16,14 +16,6 @@ identity_client = oci.identity.IdentityClient(config)
 log_analytics_client = oci.log_analytics.LogAnalyticsClient(config)
 quotas_client = oci.limits.QuotasClient(config)
 
-# custom_retry_strategy = oci.retry.RetryStrategyBuilder(
-#     # Make up to 5 service calls
-#     max_attempts_check=True,
-#     max_attempts=5,
-#     # Don't exceed a total of 300 seconds for all service calls
-#     total_elapsed_time_check=True,
-#     total_elapsed_time_seconds=300
-# ).get_retry_strategy()
 
 #Fetch availability domain names
 availability_domains = identity_client.list_availability_domains(compartment_id=tenancy_id).data
@@ -164,5 +156,5 @@ if __name__ == '__main__':
     if "<tenancy_name>" in compartment_names:
         compartment_names.remove('<tenancy_name>')
     print(compartment_names)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(list_compartments_quota, compartment_names)
