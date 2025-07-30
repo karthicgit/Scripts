@@ -193,8 +193,7 @@ def create_signer(file_location, config_profile, is_instance_principals, is_dele
 
 
 if __name__ == "__main__":
-    run_only_once_per_day()
-
+    
     parser = argparse.ArgumentParser(description='Upload CIS output files to Logging Analytics')
     parser.add_argument('-c', default="", dest='file_location',
                         help='OCI config file location.')
@@ -220,4 +219,9 @@ if __name__ == "__main__":
     outer_config, outer_signer = create_signer(args.file_location, args.config_profile, args.is_instance_principals,
                                    args.is_delegation_token, args.is_security_token)
 
-    upload_logs(log_files_folder, namespace, log_group_ocid,outer_config,outer_signer)
+    try:
+        upload_logs(log_files_folder, namespace, log_group_ocid,outer_config,outer_signer)
+        print("Logs uploaded successfully")
+        run_only_once_per_day()
+    except Exception as e:
+        print(f"Exception occurred during log upload: {e}")
