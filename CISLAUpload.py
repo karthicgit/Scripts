@@ -5,6 +5,15 @@ import datetime
 from oci.log_analytics import LogAnalyticsClient
 import oci
 
+def remove_file(file_path):
+    try:
+        os.remove(file_path)
+        print(f"File {file_path} removed successfully")
+    except FileNotFoundError:
+        print(f"File {file_path} not found")
+    except Exception as e:
+        print(f"Error removing file {file_path}: {e}")
+
 def run_only_once_per_day():
 
     lock_file_path = "/tmp/la_upload.txt"
@@ -215,6 +224,7 @@ if __name__ == "__main__":
     log_files_folder = args.directory
     namespace = args.namespace
     log_group_ocid = args.loggroup
+    run_only_once_per_day()
 
     outer_config, outer_signer = create_signer(args.file_location, args.config_profile, args.is_instance_principals,
                                    args.is_delegation_token, args.is_security_token)
@@ -222,6 +232,7 @@ if __name__ == "__main__":
     try:
         upload_logs(log_files_folder, namespace, log_group_ocid,outer_config,outer_signer)
         print("Logs uploaded successfully")
-        run_only_once_per_day()
+        
     except Exception as e:
+        remove_file("/tmp/la_upload.txt")
         print(f"Exception occurred during log upload: {e}")
