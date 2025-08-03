@@ -3,7 +3,9 @@ import argparse
 import datetime
 
 from oci.log_analytics import LogAnalyticsClient
+from oci.object_storage import ObjectStorageClient
 import oci
+
 
 def remove_file(file_path):
     try:
@@ -14,8 +16,20 @@ def remove_file(file_path):
     except Exception as e:
         print(f"Error removing file {file_path}: {e}")
 
-def run_only_once_per_day():
+def get_namespace(config, signer):
+    try:
+        object_storage_client = ObjectStorageClient(config=config, signer=signer)
+        namespace = object_storage_client.get_namespace().data
+        return namespace
+    except oci.exceptions.ServiceError as e:
+        print(f"OCI Service Error fetching namespace: {e}")
+        exit(1)
+    except Exception as e:
+       print(f"Error fetching namespace: {e}")
+       exit(1)
 
+
+def run_only_once_per_day():
     lock_file_path = "/tmp/la_upload.txt"
     today = datetime.date.today().strftime('%Y-%m-%d')
 
@@ -35,40 +49,42 @@ def run_only_once_per_day():
         with open(lock_file_path, 'w') as f:
             f.write(today)
 
+
 ## CIS csv files to upload to Logging Analytics . The LogSource should pre-exist.
 log_sources = {
     'cis_summary_report.csv': 'CISSummary',
     'cis_Storage_Object_Storage_5-1-1.csv': 'CISObjectstorage',
     'cis_Storage_Object_Storage_5-1-2.csv': 'CISObjectstorage',
     'cis_Storage_Object_Storage_5-1-3.csv': 'CISObjectstorage',
-    'cis_Compute_3-1.csv' : 'CISCompute',
-    'cis_Compute_3-2.csv' : 'CISCompute',
-    'cis_Compute_3-3.csv' : 'CISCompute',
-    'cis_Storage_Block_Volumes_5-2-1.csv' : 'CISBlockvolume',
-    'cis_Storage_Block_Volumes_5-2-2.csv' : 'CISBlockvolume',
-    'cis_Storage_File_Storage_Service_5-3-1.csv' : 'CISFileStorage',
+    'cis_Compute_3-1.csv': 'CISCompute',
+    'cis_Compute_3-2.csv': 'CISCompute',
+    'cis_Compute_3-3.csv': 'CISCompute',
+    'cis_Storage_Block_Volumes_5-2-1.csv': 'CISBlockvolume',
+    'cis_Storage_Block_Volumes_5-2-2.csv': 'CISBlockvolume',
+    'cis_Storage_File_Storage_Service_5-3-1.csv': 'CISFileStorage',
     'cis_Networking_2-1.csv': 'CISNetworking',
     'cis_Networking_2-2.csv': 'CISNetworking',
     'cis_Networking_2-5.csv': 'CISNetworking',
     'cis_Networking_2-3.csv': 'CISNetworkingNSG',
     'cis_Networking_2-8.csv': 'CISNetworkingADB',
-    'cis_Logging_and_Monitoring_4-2.csv' : 'CISLoggingMonitoringTopic',
-    'cis_Logging_and_Monitoring_4-13.csv' : 'CISLoggingMonitoringVCNLogs',
-    'cis_Logging_and_Monitoring_4-16.csv' : 'CISLoggingMonitoringCMK',
-    'cis_Logging_and_Monitoring_4-17.csv' : 'CISLoggingMonitoringObject',
-    'cis_Identity_and_Access_Management_1-1.csv' : 'CISIdentity',
-    'cis_Identity_and_Access_Management_1-15.csv' : 'CISIdentity',
-    'cis_Identity_and_Access_Management_1-3.csv' : 'CISIdentity',
-    'cis_Identity_and_Access_Management_1-7.csv' : 'CISIdentityUser',
-    'cis_Identity_and_Access_Management_1-8.csv' : 'CISIdentityAPIKey_90days',
-    'cis_Identity_and_Access_Management_1-9.csv' : 'CISIdentitySecretkey_90days',
-    'cis_Identity_and_Access_Management_1-10.csv' : 'CISIdentityKeyRotation',
-    'cis_Identity_and_Access_Management_1-11.csv' : 'CISIdentityKeyRotation',
-    'cis_Identity_and_Access_Management_1-12.csv' : 'CISIdentityUser',
+    'cis_Logging_and_Monitoring_4-2.csv': 'CISLoggingMonitoringTopic',
+    'cis_Logging_and_Monitoring_4-13.csv': 'CISLoggingMonitoringVCNLogs',
+    'cis_Logging_and_Monitoring_4-16.csv': 'CISLoggingMonitoringCMK',
+    'cis_Logging_and_Monitoring_4-17.csv': 'CISLoggingMonitoringObject',
+    'cis_Identity_and_Access_Management_1-1.csv': 'CISIdentity',
+    'cis_Identity_and_Access_Management_1-15.csv': 'CISIdentity',
+    'cis_Identity_and_Access_Management_1-3.csv': 'CISIdentity',
+    'cis_Identity_and_Access_Management_1-7.csv': 'CISIdentityUser',
+    'cis_Identity_and_Access_Management_1-8.csv': 'CISIdentityAPIKey_90days',
+    'cis_Identity_and_Access_Management_1-9.csv': 'CISIdentitySecretkey_90days',
+    'cis_Identity_and_Access_Management_1-10.csv': 'CISIdentityKeyRotation',
+    'cis_Identity_and_Access_Management_1-11.csv': 'CISIdentityKeyRotation',
+    'cis_Identity_and_Access_Management_1-12.csv': 'CISIdentityUser',
     'cis_Identity_and_Access_Management_1-13.csv': 'CISIdentityUser',
     'cis_Identity_and_Access_Management_1-16.csv': 'CISIdentityIAM45days',
     'cis_Identity_and_Access_Management_1-17.csv': 'CISIdentityOneActiveKey',
 }
+
 
 ##Function to upload to Logging Analytics.
 def upload_logs(log_files_folder, namespace, log_group_ocid, config, signer):
@@ -202,37 +218,38 @@ def create_signer(file_location, config_profile, is_instance_principals, is_dele
 
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description='Upload CIS output files to Logging Analytics')
-    parser.add_argument('-c', default="", dest='file_location',
-                        help='OCI config file location.')
-    parser.add_argument('-t', default="", dest='config_profile',
-                        help='Config file section to use (tenancy profile).')
-    parser.add_argument('-ip', action='store_true', default=False,
-                        dest='is_instance_principals', help='Use Instance Principals for Authentication.')
-    parser.add_argument('-dt', action='store_true', default=False,
-                        dest='is_delegation_token', help='Use Delegation Token for Authentication in Cloud Shell.')
-    parser.add_argument('-st', action='store_true', default=False,
-                        dest='is_security_token', help='Authenticate using Security Token.')
-
-
-    parser.add_argument('-d', '--directory', help='Absolute Folder path', required=True)
-    parser.add_argument('-ns', '--namespace', help='Namespace', required=True)
-    parser.add_argument('-lg', '--loggroup', help='LogGroup Id', required=True)
-    args = parser.parse_args()
-
-    log_files_folder = args.directory
-    namespace = args.namespace
-    log_group_ocid = args.loggroup
-    run_only_once_per_day()
-
-    outer_config, outer_signer = create_signer(args.file_location, args.config_profile, args.is_instance_principals,
-                                   args.is_delegation_token, args.is_security_token)
-
     try:
-        upload_logs(log_files_folder, namespace, log_group_ocid,outer_config,outer_signer)
+
+        parser = argparse.ArgumentParser(description='Upload CIS output files to Logging Analytics')
+        parser.add_argument('-c', default="", dest='file_location',
+                            help='OCI config file location.')
+        parser.add_argument('-t', default="", dest='config_profile',
+                            help='Config file section to use (tenancy profile).')
+        parser.add_argument('-ip', action='store_true', default=False,
+                            dest='is_instance_principals', help='Use Instance Principals for Authentication.')
+        parser.add_argument('-dt', action='store_true', default=False,
+                            dest='is_delegation_token', help='Use Delegation Token for Authentication in Cloud Shell.')
+        parser.add_argument('-st', action='store_true', default=False,
+                            dest='is_security_token', help='Authenticate using Security Token.')
+
+        parser.add_argument('-d', '--directory', help='Absolute Folder path', required=True)
+        #parser.add_argument('-ns', '--namespace', help='Namespace', required=True)
+        parser.add_argument('-lg', '--loggroup', help='LogGroup Id', required=True)
+        args = parser.parse_args()
+
+        log_files_folder = args.directory
+
+        log_group_ocid = args.loggroup
+
+        outer_config, outer_signer = create_signer(args.file_location, args.config_profile, args.is_instance_principals,
+                                               args.is_delegation_token, args.is_security_token)
+        namespace = get_namespace(outer_config,outer_signer)
+        run_only_once_per_day()
+
+        upload_logs(log_files_folder, namespace, log_group_ocid, outer_config, outer_signer)
         print("Logs uploaded successfully")
-        
+
     except Exception as e:
         remove_file("/tmp/la_upload.txt")
         print(f"Exception occurred during log upload: {e}")
+        exit(1)
