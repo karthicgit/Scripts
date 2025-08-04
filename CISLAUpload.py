@@ -247,7 +247,6 @@ if __name__ == "__main__":
         run_only_once_per_day()
 
         upload_logs(log_files_folder, namespace, log_group_ocid, outer_config, outer_signer)
-        print("Logs uploaded successfully")
 
     except Exception as e:
         remove_file("/tmp/la_upload.txt")
