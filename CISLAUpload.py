@@ -30,7 +30,7 @@ def get_namespace(config, signer):
 
 
 def run_only_once_per_day():
-    lock_file_path = "/tmp/la_upload.txt"
+    lock_file_path = "./la_upload.txt"
     today = datetime.date.today().strftime('%Y-%m-%d')
 
     if os.path.exists(lock_file_path):
@@ -249,6 +249,6 @@ if __name__ == "__main__":
         upload_logs(log_files_folder, namespace, log_group_ocid, outer_config, outer_signer)
 
     except Exception as e:
-        remove_file("/tmp/la_upload.txt")
+        remove_file("./la_upload.txt")
         print(f"Exception occurred during log upload: {e}")
         exit(1)
