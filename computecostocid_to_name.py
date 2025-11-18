@@ -1,5 +1,6 @@
 import oci
 from datetime import datetime, timedelta
+import pandas as pd
 
 config = oci.config.from_file()
 
@@ -90,7 +91,11 @@ if __name__ == "__main__":
 
     now = datetime.now().replace(microsecond=0, second=0, minute=0, hour=0).isoformat('T', 'milliseconds') + 'Z'
 
+    #update the days as per your requirement
     x_daysbefore = datetime.now().replace(microsecond=0, second=0, minute=0, hour=0) - timedelta(days=30)
     x_daysbefore = x_daysbefore.isoformat('T', 'milliseconds') + 'Z'
 
-    print(usage_report(x_daysbefore, now))
+    data = usage_report(x_daysbefore, now)
+    df = pd.DataFrame(data)
+    df.to_csv('computecostreport.csv', index=False)
+
